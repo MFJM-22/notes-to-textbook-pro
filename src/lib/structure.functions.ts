@@ -4,8 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const Input = z.object({ bookId: z.string().uuid() });
 
-type ChatResponse = {
-  choices?: Array<{ message?: { content?: string } }>;
+type GeminiResponse = {
+  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   error?: { message?: string };
 };
 
@@ -44,8 +44,8 @@ export const structureBook = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
     const { data: book, error: bookErr } = await supabase
       .from("books").select("*").eq("id", data.bookId).eq("author_id", userId).single();
@@ -61,30 +61,36 @@ export const structureBook = createServerFn({ method: "POST" })
 
     if (!notes.trim()) throw new Error("No OCR text found for this book yet.");
 
-    const system = `You are an expert Nigerian JSS curriculum editor. Take a teacher's raw scanned lesson notes and organize them into a coherent term textbook for ${book.class_level} ${book.subject}, ${book.term}. Produce 10–13 weeks. Each week has 1–3 topics. Each topic has a heading, well-written body (2–5 paragraphs of markdown suitable for a printed textbook, expand the notes into full sentences, keep facts from the notes), 2–4 objectives (starts with a verb), and 2–4 activities. Output ONLY valid JSON, no prose, no code fences. Shape: {"weeks":[{"week_number":1,"title":"...","overview":"...","topics":[{"heading":"...","body_markdown":"...","objectives":["..."],"activities":["..."]}]}]}`;
+    const prompt = `You are an expert Nigerian JSS curriculum editor. Take a teacher's raw scanned lesson notes and organize them into a coherent term textbook for ${book.class_level} ${book.subject}, ${book.term}. Produce 10–13 weeks. Each week has 1–3 topics. Each topic has a heading, well-written body (2–5 paragraphs of markdown suitable for a printed textbook, expand the notes into full sentences, keep facts from the notes), 2–4 objectives (starts with a verb), and 2–4 activities. Output ONLY valid JSON, no prose, no code fences. Shape: {"weeks":[{"week_number":1,"title":"...","overview":"...","topics":[{"heading":"...","body_markdown":"...","objectives":["..."],"activities":["..."]}]}]}
 
-    const user = `Book title: ${book.title}\n\nTeacher's raw notes (from OCR of scanned pages):\n\n${notes}`;
+Book title: ${book.title}
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
+Teacher's raw notes (from OCR of scanned pages):
+
+${notes}`;
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.3,
+          },
+        }),
+      },
+    );
 
     if (!res.ok) {
       const body = await res.text();
       throw new Error(`AI structuring failed [${res.status}]: ${body}`);
     }
 
-    const json = (await res.json()) as ChatResponse;
-    const raw = json.choices?.[0]?.message?.content ?? "";
+    const json = (await res.json()) as GeminiResponse;
+    const raw = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const parsed = StructureSchema.parse(extractJson(raw));
 
     // Wipe existing structure (topics cascade)

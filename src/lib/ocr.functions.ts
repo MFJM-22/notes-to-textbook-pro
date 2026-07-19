@@ -4,8 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const RunOcrInput = z.object({ pageId: z.string().uuid() });
 
-type ChatResponse = {
-  choices?: Array<{ message?: { content?: string } }>;
+type GeminiResponse = {
+  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   error?: { message?: string };
 };
 
@@ -14,8 +14,8 @@ export const runOcrOnPage = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => RunOcrInput.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
     // 1. Load page row (RLS ensures ownership)
     const { data: page, error: pageErr } = await supabase
@@ -32,32 +32,28 @@ export const runOcrOnPage = createServerFn({ method: "POST" })
     // 3. Mark processing
     await supabase.from("pages").update({ ocr_status: "processing" }).eq("id", page.id);
 
-    // 4. Call Lovable AI Gateway (Gemini vision) for OCR
+    // 4. Call Gemini vision API directly for OCR
     try {
-      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Lovable-API-Key": apiKey,
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: "You are an OCR engine for scanned lesson notes (English, may include handwriting). Transcribe the page exactly as written. Preserve line breaks, headings, numbered lists, and mathematical notation. Do not summarize, translate, or add commentary. Output only the transcribed text.\n\nTranscribe every word on this page verbatim.",
+                  },
+                  { inlineData: { mimeType: mime, data: b64 } },
+                ],
+              },
+            ],
+            generationConfig: { temperature: 0 },
+          }),
         },
-        body: JSON.stringify({
-          model: "google/gemini-3.5-flash",
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are an OCR engine for scanned lesson notes (English, may include handwriting). Transcribe the page exactly as written. Preserve line breaks, headings, numbered lists, and mathematical notation. Do not summarize, translate, or add commentary. Output only the transcribed text.",
-            },
-            {
-              role: "user",
-              content: [
-                { type: "text", text: "Transcribe every word on this page verbatim." },
-                { type: "image_url", image_url: { url: `data:${mime};base64,${b64}` } },
-              ],
-            },
-          ],
-        }),
-      });
+      );
 
       if (!res.ok) {
         const body = await res.text();
@@ -65,8 +61,8 @@ export const runOcrOnPage = createServerFn({ method: "POST" })
         throw new Error(`Gemini OCR failed [${res.status}]: ${body}`);
       }
 
-      const json = (await res.json()) as ChatResponse;
-      const text = json.choices?.[0]?.message?.content?.trim() ?? "";
+      const json = (await res.json()) as GeminiResponse;
+      const text = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
 
       await supabase.from("pages").update({
         ocr_status: "done",

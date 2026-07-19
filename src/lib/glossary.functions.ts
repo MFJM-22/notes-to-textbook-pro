@@ -4,8 +4,8 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const Input = z.object({ bookId: z.string().uuid() });
 
-type ChatResponse = {
-  choices?: Array<{ message?: { content?: string } }>;
+type GeminiResponse = {
+  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   error?: { message?: string };
 };
 
@@ -35,8 +35,8 @@ export const generateGlossary = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => Input.parse(input))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
     const { data: book } = await supabase
       .from("books").select("*").eq("id", data.bookId).eq("author_id", userId).single();
@@ -52,28 +52,36 @@ export const generateGlossary = createServerFn({ method: "POST" })
 
     if (!corpus.trim()) throw new Error("Structure the book first before generating a glossary.");
 
-    const system = `You are a textbook glossary editor for Nigerian junior secondary students. Extract 15–30 important terms from the given textbook content. Definitions must be clear, one or two sentences, age-appropriate for JSS students. Output ONLY valid JSON, no prose, no code fences. Shape: {"terms":[{"term":"...","definition":"..."}]}`;
+    const prompt = `You are a textbook glossary editor for Nigerian junior secondary students. Extract 15–30 important terms from the given textbook content. Definitions must be clear, one or two sentences, age-appropriate for JSS students. Output ONLY valid JSON, no prose, no code fences. Shape: {"terms":[{"term":"...","definition":"..."}]}
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: `Subject: ${book.subject}\nClass: ${book.class_level}\n\nContent:\n${corpus}` },
-        ],
-        response_format: { type: "json_object" },
-      }),
-    });
+Subject: ${book.subject}
+Class: ${book.class_level}
+
+Content:
+${corpus}`;
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.3,
+          },
+        }),
+      },
+    );
 
     if (!res.ok) {
       const body = await res.text();
       throw new Error(`Glossary generation failed [${res.status}]: ${body}`);
     }
 
-    const json = (await res.json()) as ChatResponse;
-    const raw = json.choices?.[0]?.message?.content ?? "";
+    const json = (await res.json()) as GeminiResponse;
+    const raw = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     const parsed = GlossarySchema.parse(extractJson(raw));
 
     await supabase.from("glossary_terms").delete().eq("book_id", book.id);
