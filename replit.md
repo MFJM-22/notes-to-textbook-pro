@@ -6,8 +6,10 @@ A web app for JSS1 & JSS2 teachers in Nigeria that turns scanned handwritten les
 
 - **Framework**: TanStack Start (SSR) + React 19
 - **Styling**: Tailwind CSS v4 + Radix UI (shadcn/ui components)
-- **Backend**: Supabase (auth, database, storage)
-- **AI**: Lovable AI Gateway → Google Gemini (OCR, structuring, glossary)
+- **Backend**: Supabase (auth, database, storage) — project `deazalzafwitqhluxrjb`
+- **AI**: Google Gemini API directly (`generativelanguage.googleapis.com`)
+  - OCR: `gemini-2.0-flash` (vision)
+  - Structuring & glossary: `gemini-2.5-flash`
 - **Export**: `docx` npm package for Word file generation
 - **Package manager**: `bun`
 
@@ -22,34 +24,46 @@ A web app for JSS1 & JSS2 teachers in Nigeria that turns scanned handwritten les
 ## Key source files
 
 - `src/routes/index.tsx` — landing page
+- `src/routes/auth.tsx` — sign-in / sign-up (email + Google OAuth via Supabase)
 - `src/routes/_authenticated/` — authenticated app routes
-- `src/lib/*.functions.ts` — server functions (OCR, structuring, glossary, export)
-- `src/integrations/` — Supabase client setup
+- `src/lib/ocr.functions.ts` — Gemini vision OCR server function
+- `src/lib/structure.functions.ts` — AI structuring server function
+- `src/lib/glossary.functions.ts` — AI glossary generation server function
+- `src/lib/export.functions.ts` — Word export server function
+- `src/integrations/supabase/` — Supabase client setup
+- `src/integrations/lovable/index.ts` — Google OAuth wrapper (uses Supabase directly)
 - `supabase/migrations/` — database schema
 
-## Environment
-
-The project reads from `.env` for Supabase connection details. On Replit, store secrets via the Secrets manager (not in `.env`).
-
-### Required secrets / env vars
-
-| Variable | Purpose |
-|---|---|
-| `VITE_SUPABASE_URL` | Supabase project URL |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase anon/publishable key |
-| `SUPABASE_URL` | Same URL, used server-side |
-| `SUPABASE_PUBLISHABLE_KEY` | Same key, used server-side |
-
-The Lovable AI Gateway credential is handled by the `@lovable.dev/cloud-auth-js` package at runtime.
-
-## Running locally
+## Running on Replit
 
 ```bash
-bun install
-bun run dev
+bun run dev   # starts on port 5000
 ```
 
-The dev server starts on port 3000 (configured by TanStack Start / Vite).
+The "Start application" workflow runs `bun run dev` and serves the app on port 5000.
+
+## Secrets (stored in Replit Secrets)
+
+| Secret | Purpose |
+|---|---|
+| `SUPABASE_URL` | Supabase project URL (also set as plain env var) |
+| `VITE_SUPABASE_URL` | Same — Vite client-side injection |
+| `SUPABASE_PUBLISHABLE_KEY` | Supabase anon key (server-side) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Same — Vite client-side injection |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key — bypasses RLS (server only) |
+| `GEMINI_API_KEY` | Google Gemini API key |
+
+## Google OAuth
+
+Google sign-in routes through Supabase's built-in OAuth. To enable it:
+1. Supabase dashboard → Authentication → Providers → Google
+2. Add your Google OAuth client ID & secret
+3. Set the redirect URL shown there in your Google Cloud Console
+
+## Notes
+
+- The hydration mismatch warning in dev logs is benign — a known TanStack Start SSR/client dev-mode quirk.
+- `@lovable.dev/cloud-auth-js` and the Lovable AI Gateway have been removed; the app now calls Google's Gemini API directly.
 
 ## User preferences
 

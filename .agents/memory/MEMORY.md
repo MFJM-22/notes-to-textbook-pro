@@ -1,0 +1,1 @@
+- [Textbook Studio setup](textbook-studio-setup.md) — Lovable→Replit migration: gateway replaced with direct Gemini API, auth swapped to Supabase OAuth.
