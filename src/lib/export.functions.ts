@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
-  PageBreak, LevelFormat, TableOfContents,
+  PageBreak, LevelFormat,
 } from "docx";
 
 const Input = z.object({ bookId: z.string().uuid() });
