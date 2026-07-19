@@ -212,11 +212,6 @@ function BookReview() {
   );
 }
 
-// Small helper so we can call server fns from event handlers imperatively.
-function useServerFnWrap<T extends (arg: { data: unknown }) => Promise<unknown>>(fn: T) {
-  const wrapped = useServerFn(fn as never) as unknown as (arg: { data: unknown }) => Promise<unknown>;
-  return async (data: unknown) => (await wrapped({ data })) as never;
-}
 
 function WeekView({
   week, topics, onChange, onDeleteWeek,
