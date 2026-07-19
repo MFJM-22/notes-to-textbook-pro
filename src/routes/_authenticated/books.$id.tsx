@@ -142,9 +142,9 @@ function BookReview() {
               <span>Weeks</span>
               <button
                 onClick={async () => {
-                  const { id: wid } = await (useServerFnWrap(addWeek))({ bookId: id });
+                  const res = (await addWeekFn({ data: { bookId: id } })) as { id: string };
                   qc.invalidateQueries({ queryKey: ["book", id] });
-                  setSelection({ kind: "week", id: wid });
+                  setSelection({ kind: "week", id: res.id });
                 }}
                 className="rounded p-1 hover:bg-secondary"
                 title="Add week"
