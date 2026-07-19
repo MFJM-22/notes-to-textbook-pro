@@ -1,5 +1,4 @@
-// Lovable auth replaced with direct Supabase OAuth.
-// Google OAuth provider must be enabled in your Supabase project's Auth settings.
+// Google OAuth via Supabase — provider must be enabled in your Supabase Auth settings.
 import { supabase } from "../supabase/client";
 
 type SignInOptions = {
@@ -7,7 +6,7 @@ type SignInOptions = {
   extraParams?: Record<string, string>;
 };
 
-export const lovable = {
+export const oauthClient = {
   auth: {
     signInWithOAuth: async (
       provider: "google" | "apple" | "microsoft",

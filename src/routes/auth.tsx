@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { oauthClient } from "@/integrations/oauth/index";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -56,7 +56,7 @@ function AuthPage() {
 
   const google = async () => {
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
+    const result = await oauthClient.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
     if (result.error) {

@@ -18,9 +18,19 @@ Response shape changed from OpenAI-compatible (`choices[0].message.content`) to 
 
 ## Auth: `@lovable.dev/cloud-auth-js` → Supabase OAuth
 
-`src/integrations/lovable/index.ts` previously used `createLovableAuth()` for Google sign-in. Replaced with `supabase.auth.signInWithOAuth({ provider: "google" })` keeping the same exported `lovable.auth.signInWithOAuth` interface so `auth.tsx` needed no changes.
+`src/integrations/oauth/index.ts` (formerly `lovable/index.ts`) exports `oauthClient.auth.signInWithOAuth` backed by `supabase.auth.signInWithOAuth`. `src/routes/auth.tsx` imports from the new path.
 
 **Why:** `@lovable.dev/cloud-auth-js` is Lovable-environment-specific.
+
+## Vite config: `@lovable.dev/vite-tanstack-config` → standard stack
+
+`vite.config.ts` now imports directly from `@tanstack/react-start/plugin/vite` (`tanstackStart`), plus `@vitejs/plugin-react`, `@tailwindcss/vite`, and `vite-tsconfig-paths`. The two `@lovable.dev` npm packages are removed from `package.json`.
+
+**Why:** Remove Lovable-specific tooling; the underlying packages are all standard.
+
+## Error reporting: `lovable-error-reporting.ts` → `error-reporting.ts`
+
+Renamed file and function (`reportLovableError` → `reportError`). Global window types updated (`__lovableEvents` → `__errorEvents`). These hooks are no-ops outside a Lovable editor preview anyway.
 
 ## Supabase project
 
@@ -33,3 +43,7 @@ The imported `.env` had a stale Supabase project (`tkqigeuemcoloxhdriwg`). The r
 ## Port
 
 Configured `vite.config.ts` to use `port: 5000, host: "0.0.0.0", allowedHosts: true` so Replit's proxied iframe preview works.
+
+## Documentation
+
+`README.md` is the canonical project doc. No `replit.md`. `AGENTS.md` removed (was Lovable boilerplate).
