@@ -8,12 +8,7 @@ export default defineConfig({
   plugins: [
     tanstackStart({
       // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-      // Use the Vercel preset when deploying to Vercel so Vinxi emits the correct
-      // Build Output API format (.vercel/output/) with serverless functions and routing.
-      server: {
-        entry: "server",
-        preset: process.env.VERCEL ? "vercel" : undefined,
-      },
+      server: { entry: "server" },
     }),
     react(),
     tailwindcss(),
