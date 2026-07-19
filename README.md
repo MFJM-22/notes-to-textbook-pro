@@ -1,6 +1,6 @@
 # Textbook Studio
 
-A web app for JSS1 & JSS2 teachers in Nigeria that turns scanned handwritten lesson notes into publication-ready textbooks — weeks, topics, glossary, and a Word export ready to print or send to a publisher.
+A web app for JSS1 & JSS2 teachers in Nigeria that turns scanned handwritten lesson notes into publication-ready textbooks weeks, topics, glossary, and a Word export ready to print or send to a publisher.
 
 ## Features
 
