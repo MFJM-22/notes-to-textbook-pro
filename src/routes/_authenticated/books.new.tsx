@@ -170,9 +170,16 @@ function NewBookWizard() {
                   </li>
                 ))}
               </ul>
-              <div className="mt-6 flex justify-end">
-                <button onClick={() => navigate({ to: "/dashboard" })} className="btn-primary btn-primary-hover">
-                  Done
+              <div className="mt-6 flex justify-end gap-2">
+                <button onClick={() => navigate({ to: "/dashboard" })} className="btn-outline">
+                  Back to dashboard
+                </button>
+                <button
+                  onClick={() => bookId && navigate({ to: "/books/$id", params: { id: bookId } })}
+                  disabled={!items.length || items.some((it) => it.status !== "done" && it.status !== "failed")}
+                  className="btn-primary btn-primary-hover"
+                >
+                  Review & structure <ArrowRight className="ml-1 h-4 w-4" />
                 </button>
               </div>
             </div>
