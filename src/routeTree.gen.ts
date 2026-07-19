@@ -16,6 +16,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBooksNewRouteImport } from './routes/_authenticated/books.new'
 import { Route as AuthenticatedBooksIdRouteImport } from './routes/_authenticated/books.$id'
+import { Route as AuthenticatedBooksIdPrintRouteImport } from './routes/_authenticated/books.$id.print'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -51,22 +52,30 @@ const AuthenticatedBooksIdRoute = AuthenticatedBooksIdRouteImport.update({
   path: '/books/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBooksIdPrintRoute =
+  AuthenticatedBooksIdPrintRouteImport.update({
+    id: '/print',
+    path: '/print',
+    getParentRoute: () => AuthenticatedBooksIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/books/$id': typeof AuthenticatedBooksIdRoute
+  '/books/$id': typeof AuthenticatedBooksIdRouteWithChildren
   '/books/new': typeof AuthenticatedBooksNewRoute
+  '/books/$id/print': typeof AuthenticatedBooksIdPrintRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/books/$id': typeof AuthenticatedBooksIdRoute
+  '/books/$id': typeof AuthenticatedBooksIdRouteWithChildren
   '/books/new': typeof AuthenticatedBooksNewRoute
+  '/books/$id/print': typeof AuthenticatedBooksIdPrintRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -75,8 +84,9 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/_authenticated/books/$id': typeof AuthenticatedBooksIdRoute
+  '/_authenticated/books/$id': typeof AuthenticatedBooksIdRouteWithChildren
   '/_authenticated/books/new': typeof AuthenticatedBooksNewRoute
+  '/_authenticated/books/$id/print': typeof AuthenticatedBooksIdPrintRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -87,8 +97,16 @@ export interface FileRouteTypes {
     | '/profile'
     | '/books/$id'
     | '/books/new'
+    | '/books/$id/print'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/profile' | '/books/$id' | '/books/new'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/profile'
+    | '/books/$id'
+    | '/books/new'
+    | '/books/$id/print'
   id:
     | '__root__'
     | '/'
@@ -98,6 +116,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/books/$id'
     | '/_authenticated/books/new'
+    | '/_authenticated/books/$id/print'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -157,20 +176,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBooksIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/books/$id/print': {
+      id: '/_authenticated/books/$id/print'
+      path: '/print'
+      fullPath: '/books/$id/print'
+      preLoaderRoute: typeof AuthenticatedBooksIdPrintRouteImport
+      parentRoute: typeof AuthenticatedBooksIdRoute
+    }
   }
 }
+
+interface AuthenticatedBooksIdRouteChildren {
+  AuthenticatedBooksIdPrintRoute: typeof AuthenticatedBooksIdPrintRoute
+}
+
+const AuthenticatedBooksIdRouteChildren: AuthenticatedBooksIdRouteChildren = {
+  AuthenticatedBooksIdPrintRoute: AuthenticatedBooksIdPrintRoute,
+}
+
+const AuthenticatedBooksIdRouteWithChildren =
+  AuthenticatedBooksIdRoute._addFileChildren(AuthenticatedBooksIdRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedBooksIdRoute: typeof AuthenticatedBooksIdRoute
+  AuthenticatedBooksIdRoute: typeof AuthenticatedBooksIdRouteWithChildren
   AuthenticatedBooksNewRoute: typeof AuthenticatedBooksNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedBooksIdRoute: AuthenticatedBooksIdRoute,
+  AuthenticatedBooksIdRoute: AuthenticatedBooksIdRouteWithChildren,
   AuthenticatedBooksNewRoute: AuthenticatedBooksNewRoute,
 }
 

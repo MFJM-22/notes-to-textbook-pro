@@ -47,6 +47,7 @@ function BookReview() {
   const structure = useServerFn(structureBook);
   const glossary = useServerFn(generateGlossary);
   const doExport = useServerFn(exportBookDocx);
+  const addWeekFn = useServerFn(addWeek);
 
   const structureMut = useMutation({
     mutationFn: () => structure({ data: { bookId: id } }),
