@@ -46,7 +46,7 @@ await cp(resolve(ROOT, "dist/client"), STATIC, { recursive: true });
 //   self-contained (no node_modules required in the function directory).
 console.log("▶ Bundling dist/server/index.js with esbuild…");
 await esbuild({
-  entryPoints: [resolve(ROOT, "dist/server/index.js")],
+  entryPoints: [resolve(ROOT, "dist/server/server.js")],
   bundle: true,
   platform: "node",
   format: "esm",
