@@ -14,7 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      authors: {
+        Row: {
+          avatar_url: string | null
+          bio: string
+          created_at: string
+          credentials: string
+          full_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string
+          created_at?: string
+          credentials?: string
+          full_name?: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string
+          created_at?: string
+          credentials?: string
+          full_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      books: {
+        Row: {
+          author_id: string
+          class_level: string
+          created_at: string
+          id: string
+          status: string
+          subject: string
+          term: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          class_level: string
+          created_at?: string
+          id?: string
+          status?: string
+          subject: string
+          term: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          class_level?: string
+          created_at?: string
+          id?: string
+          status?: string
+          subject?: string
+          term?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pages: {
+        Row: {
+          author_id: string
+          book_id: string
+          created_at: string
+          id: string
+          mime_type: string | null
+          ocr_confidence: number | null
+          ocr_status: string
+          ocr_text: string | null
+          page_order: number
+          storage_path: string
+        }
+        Insert: {
+          author_id: string
+          book_id: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          ocr_confidence?: number | null
+          ocr_status?: string
+          ocr_text?: string | null
+          page_order?: number
+          storage_path: string
+        }
+        Update: {
+          author_id?: string
+          book_id?: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          ocr_confidence?: number | null
+          ocr_status?: string
+          ocr_text?: string | null
+          page_order?: number
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pages_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
