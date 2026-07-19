@@ -80,6 +80,54 @@ export type Database = {
         }
         Relationships: []
       }
+      glossary_terms: {
+        Row: {
+          author_id: string
+          book_id: string
+          created_at: string
+          definition: string
+          id: string
+          source_week_id: string | null
+          term: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          book_id: string
+          created_at?: string
+          definition?: string
+          id?: string
+          source_week_id?: string | null
+          term: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          book_id?: string
+          created_at?: string
+          definition?: string
+          id?: string
+          source_week_id?: string | null
+          term?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "glossary_terms_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "glossary_terms_source_week_id_fkey"
+            columns: ["source_week_id"]
+            isOneToOne: false
+            referencedRelation: "weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pages: {
         Row: {
           author_id: string
@@ -120,6 +168,107 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "pages_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topics: {
+        Row: {
+          activities: string[]
+          author_id: string
+          body_markdown: string
+          book_id: string
+          created_at: string
+          heading: string
+          id: string
+          objectives: string[]
+          order_index: number
+          updated_at: string
+          week_id: string
+        }
+        Insert: {
+          activities?: string[]
+          author_id: string
+          body_markdown?: string
+          book_id: string
+          created_at?: string
+          heading?: string
+          id?: string
+          objectives?: string[]
+          order_index?: number
+          updated_at?: string
+          week_id: string
+        }
+        Update: {
+          activities?: string[]
+          author_id?: string
+          body_markdown?: string
+          book_id?: string
+          created_at?: string
+          heading?: string
+          id?: string
+          objectives?: string[]
+          order_index?: number
+          updated_at?: string
+          week_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topics_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weeks: {
+        Row: {
+          author_id: string
+          book_id: string
+          created_at: string
+          id: string
+          order_index: number
+          overview: string
+          title: string
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          author_id: string
+          book_id: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          overview?: string
+          title?: string
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          author_id?: string
+          book_id?: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          overview?: string
+          title?: string
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weeks_book_id_fkey"
             columns: ["book_id"]
             isOneToOne: false
             referencedRelation: "books"
