@@ -89,7 +89,7 @@ function NewBookWizard() {
     }));
 
     // Update book status
-    await supabase.from("books").update({ status: "awaiting_review" }).eq("id", bookId);
+    await supabase.from("books").update({ status: "awaiting_structuring" }).eq("id", bookId);
   };
 
   return (
