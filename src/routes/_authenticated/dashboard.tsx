@@ -11,6 +11,8 @@ const statusLabel: Record<string, { label: string; icon: React.ComponentType<{ c
   uploading: { label: "Uploading", icon: Clock, color: "oklch(0.72 0.14 55)" },
   ocr_processing: { label: "OCR Processing", icon: ScanText, color: "oklch(0.65 0.15 240)" },
   awaiting_review: { label: "Awaiting Review", icon: Clock, color: "oklch(0.72 0.14 55)" },
+  awaiting_structuring: { label: "Ready to structure", icon: ScanText, color: "oklch(0.65 0.15 240)" },
+  structured: { label: "Structured", icon: CheckCircle2, color: "oklch(0.6 0.14 165)" },
   generated: { label: "Generated", icon: CheckCircle2, color: "oklch(0.55 0.15 145)" },
 };
 
