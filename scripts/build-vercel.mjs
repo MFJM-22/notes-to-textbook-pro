@@ -49,32 +49,37 @@ await esbuild({
   entryPoints: [resolve(ROOT, "dist/server/server.js")],
   bundle: true,
   platform: "node",
-  format: "esm",
-  outfile: `${FUNC}/server-bundle.mjs`,
-  // Keep built-in Node modules external — they're provided by the runtime.
+  // CJS is required: react-dom-server is CJS and uses dynamic require() for
+  // Node built-ins (e.g. "util"). Bundling as ESM causes
+  // "Dynamic require of 'util' is not supported" at runtime.
+  format: "cjs",
+  outfile: `${FUNC}/server-bundle.js`,
+  // Keep built-in Node modules external — provided by the runtime.
   external: ["node:*", "fs", "path", "os", "crypto", "stream", "http", "https",
              "net", "tls", "zlib", "events", "util", "url", "buffer", "assert",
              "child_process", "worker_threads", "readline", "perf_hooks",
              "async_hooks", "v8", "vm", "module", "cluster", "dgram", "dns",
              "domain", "inspector", "querystring", "string_decoder", "timers",
              "tty", "punycode", "repl", "sys"],
-  // Suppress warnings from packages we don't control.
   logLevel: "warning",
 });
 
 // ── 5. Write the Node.js / Vercel adapter ────────────────────────────────────
+// Use a plain .js CJS file (no "type":"module" in the function dir, so .js = CJS).
+// This matches the CJS server bundle and avoids any ESM/CJS interop issues.
 console.log("▶ Writing Node.js adapter…");
 await writeFile(
-  `${FUNC}/index.mjs`,
+  `${FUNC}/index.js`,
   `
-import serverEntry from "./server-bundle.mjs";
+"use strict";
+const serverEntry = require("./server-bundle.js");
 
 /**
  * Vercel Node.js serverless function entry.
  * Adapts Vercel's (req, res) interface to the Web Fetch API that
  * TanStack Start's server entry expects.
  */
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   try {
     const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost";
     const proto = req.headers["x-forwarded-proto"] || "https";
@@ -133,7 +138,7 @@ await writeFile(
   JSON.stringify(
     {
       runtime: "nodejs22.x",
-      handler: "index.mjs",
+      handler: "index.js",
       launcherType: "Nodejs",
     },
     null,

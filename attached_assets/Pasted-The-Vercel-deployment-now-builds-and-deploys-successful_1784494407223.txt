@@ -1,0 +1,24 @@
+The Vercel deployment now builds and deploys successfully, and the routing/404 issue is resolved. However, every page request now fails with a 500 error, and Vercel's runtime logs show this exact stack trace:
+
+```
+Error: Dynamic require of "util" is not supported
+    at file:///var/task/server-bundle.mjs:11:9
+    at node_modules/react-dom/cjs/react-dom-server.node.production.js (file:///var/task/server-bundle.mjs:61579:17)
+    at __require3 (file:///var/task/server-bundle.mjs:17:50)
+    at node_modules/react-dom/server.node.js (file:///var/task/server-bundle.mjs:82427:11)
+    at __require3 (file:///var/task/server-bundle.mjs:17:50)
+    at node_modules/@tanstack/react-router/dist/esm/ssr/renderRouterToStream.js (file:///var/task/server-bundle.mjs:83615:30)
+    at __init (file:///var/task/server-bundle.mjs:14:59)
+    at node_modules/@tanstack/react-router/dist/esm/ssr/server.js (file:///var/task/server-bundle.mjs:83711:5)
+    at __init (file:///var/task/server-bundle.mjs:14:59)
+    at dist/server/assets/server-BmkgiEyK.js (file:///var/task/server-bundle.mjs:115615:5)
+```
+
+This is happening because the server bundle is being output as an ES Module (server-bundle.mjs), but react-dom-server internally uses CommonJS-style dynamic require() to load Node's built-in "util" module — which Node's ESM loader does not support, causing a crash on every SSR render attempt.
+
+Please fix this by addressing the ESM/CJS mismatch in the server build. Likely approaches, in order of preference:
+1. Check the esbuild/Vite server build configuration (likely in vite.config.ts or the Vercel preset config) for an output format setting, and change the server bundle output format from ESM ("esm"/"module") to CommonJS ("cjs") if that's configurable for this TanStack Start Vercel adapter.
+2. If the adapter requires ESM output specifically, check whether react-dom-server needs to be marked as an external/non-bundled dependency in the esbuild config (external: ['react-dom/server'] or similar) so it's required via node_modules at runtime instead of being bundled inline, avoiding the dynamic require issue.
+3. Check the TanStack Start Vercel deployment documentation/GitHub issues for this exact error message ("Dynamic require of \"util\" is not supported" + TanStack Start + Vercel) — this is a known category of issue with ESM bundling and may already have a documented fix or a required config flag specific to this framework/adapter version.
+
+After fixing, redeploy and confirm the homepage loads without a 500 error, and check Vercel's runtime logs for the same request to confirm no errors appear.
