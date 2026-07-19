@@ -67,17 +67,20 @@ export const exportBookDocx = createServerFn({ method: "POST" })
       new Paragraph({ children: [new PageBreak()] }),
     );
 
-    // TOC
+    // TOC (plain list — Word's real TOC field requires user "Update")
     children.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
-        children: [new TextRun({ text: "Table of Contents", bold: true })],
+        children: [new TextRun({ text: "Contents", bold: true })],
       }),
-      new Paragraph({
-        children: [new TableOfContents("Contents", { hyperlink: true, headingStyleRange: "1-2" }) as unknown as TextRun],
-      }),
-      new Paragraph({ children: [new PageBreak()] }),
     );
+    for (const w of weeks ?? []) {
+      children.push(new Paragraph({
+        spacing: { after: 60 },
+        children: [new TextRun({ text: `Week ${w.week_number}: ${w.title}`, size: 22 })],
+      }));
+    }
+    children.push(new Paragraph({ children: [new PageBreak()] }));
 
     // Weeks
     for (const w of weeks ?? []) {
