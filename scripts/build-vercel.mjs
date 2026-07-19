@@ -126,7 +126,11 @@ module.exports = async function handler(req, res) {
   } catch (err) {
     console.error("[vercel-adapter] Unhandled error:", err);
     res.statusCode = 500;
-    res.end("Internal Server Error");
+    res.setHeader("content-type", "text/plain; charset=utf-8");
+    res.end(
+      "DEBUG ERROR (temporary):\n\n" +
+      (err && err.stack ? err.stack : String(err))
+    );
   }
 }
 `.trimStart()
