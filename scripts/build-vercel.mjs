@@ -72,7 +72,6 @@ await writeFile(
   `${FUNC}/index.js`,
   `
 "use strict";
-const serverEntry = require("./server-bundle.js");
 
 /**
  * Vercel Node.js serverless function entry.
@@ -81,6 +80,7 @@ const serverEntry = require("./server-bundle.js");
  */
 module.exports = async function handler(req, res) {
   try {
+    const serverEntry = require("./server-bundle.js");
     const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost";
     const proto = req.headers["x-forwarded-proto"] || "https";
     const url = new URL(req.url, \`\${proto}://\${host}\`);
