@@ -10,7 +10,7 @@ expertMode = true
 
 [userenv.shared]
 SUPABASE_URL = "https://deazalzafwitqhluxrjb.supabase.co"
-VITE_SUPABASE_URL = "https://deazalzafwitqhluxrjb.supabase.co"
+NEXT_PUBLIC_SUPABASE_URL = "https://deazalzafwitqhluxrjb.supabase.co"
 
 [workflows]
 runButton = "Project"
@@ -30,7 +30,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "bun run dev"
+args = "npm run dev"
 waitForPort = 5000
 
 [workflows.workflow.metadata]
