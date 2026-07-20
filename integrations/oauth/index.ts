@@ -1,5 +1,6 @@
 // Google OAuth via Supabase — provider must be enabled in your Supabase Auth settings.
 import { supabase } from "../supabase/client";
+import type { Provider } from "@supabase/supabase-js";
 
 type SignInOptions = {
   redirect_uri?: string;
@@ -13,7 +14,7 @@ export const oauthClient = {
       opts?: SignInOptions,
     ) => {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider,
+        provider: provider as Provider,
         options: {
           redirectTo: opts?.redirect_uri ?? window.location.origin,
           queryParams: opts?.extraParams,
