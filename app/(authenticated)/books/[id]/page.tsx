@@ -64,6 +64,17 @@ export default function BookReviewPage() {
     onSuccess: (res) => { setExportUrl(res.url); toast.success("Word file ready"); qc.invalidateQueries({ queryKey: ["book", id] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Export failed"),
   });
+  const deleteMut = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("books").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Book deleted");
+      router.push("/dashboard");
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to delete book"),
+  });
 
   useEffect(() => {
     if (!bookQ.data || selection) return;
@@ -113,6 +124,18 @@ export default function BookReviewPage() {
           <Link href={`/books/${id}/print`} target="_blank" className="btn-outline">
             <Printer className="mr-1 h-4 w-4" /> Print / PDF
           </Link>
+          <button
+            onClick={() => {
+              if (confirm("Are you sure you want to delete this book? This action cannot be undone.")) {
+                deleteMut.mutate();
+              }
+            }}
+            disabled={deleteMut.isPending}
+            className="btn-outline text-red-500 hover:text-red-600 hover:border-red-600 border-red-200"
+          >
+            {deleteMut.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Trash2 className="mr-1 h-4 w-4" />}
+            Delete
+          </button>
         </div>
       </div>
 

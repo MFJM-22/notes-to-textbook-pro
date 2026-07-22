@@ -55,16 +55,6 @@ export default function AuthPage() {
     }
   };
 
-  const google = async () => {
-    setLoading(true);
-    const result = await oauthClient.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error(result.error.message || "Google sign-in failed");
-      setLoading(false);
-    }
-  };
 
   return (
     <>
@@ -91,19 +81,6 @@ export default function AuthPage() {
                 : "Start turning your notes into a textbook."}
             </p>
 
-            <button
-              onClick={google}
-              disabled={loading}
-              className="btn-outline mt-6 w-full"
-            >
-              Continue with Google
-            </button>
-
-            <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="h-px flex-1 bg-border" />
-              <span>or with email</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
 
             <form onSubmit={submit} className="space-y-3">
               {mode === "signup" && (

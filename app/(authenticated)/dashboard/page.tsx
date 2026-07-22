@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { BookOpen, Plus, Clock, CheckCircle2, ScanText } from "lucide-react";
+import { BookOpen, Plus, Clock, CheckCircle2, ScanText, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const statusLabel: Record<
   string,
@@ -18,6 +19,7 @@ const statusLabel: Record<
 };
 
 export default function DashboardPage() {
+  const qc = useQueryClient();
   const { data: books = [], isLoading } = useQuery({
     queryKey: ["books"],
     queryFn: async () => {
@@ -35,6 +37,18 @@ export default function DashboardPage() {
     inProgress: books.filter((b) => b.status !== "generated").length,
     generated: books.filter((b) => b.status === "generated").length,
   };
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("books").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Book deleted");
+      qc.invalidateQueries({ queryKey: ["books"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to delete book"),
+  });
 
   return (
     <div>
@@ -72,25 +86,38 @@ export default function DashboardPage() {
               const s = statusLabel[b.status] ?? statusLabel.uploading;
               const Icon = s.icon;
               return (
-                <Link
-                  key={b.id}
-                  href={`/books/${b.id}`}
-                  className="book-card book-card-hover block"
-                >
-                  <div className="flex items-start justify-between">
-                    <BookOpen className="h-6 w-6" style={{ color: "var(--gold)" }} />
-                    <span
-                      className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs"
-                      style={{ color: s.color }}
-                    >
-                      <Icon className="h-3 w-3" /> {s.label}
-                    </span>
-                  </div>
-                  <h3 className="mt-4 text-xl font-semibold leading-snug">{b.title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {b.subject} · {b.class_level} · {b.term}
-                  </p>
-                </Link>
+                <div key={b.id} className="relative group">
+                  <Link
+                    href={`/books/${b.id}`}
+                    className="book-card book-card-hover block h-full"
+                  >
+                    <div className="flex items-start justify-between pr-8">
+                      <BookOpen className="h-6 w-6" style={{ color: "var(--gold)" }} />
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs"
+                        style={{ color: s.color }}
+                      >
+                        <Icon className="h-3 w-3" /> {s.label}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-xl font-semibold leading-snug">{b.title}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {b.subject} · {b.class_level} · {b.term}
+                    </p>
+                  </Link>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (confirm("Are you sure you want to delete this book? This action cannot be undone.")) {
+                        deleteMut.mutate(b.id);
+                      }
+                    }}
+                    className="absolute top-4 right-4 p-1.5 rounded-md text-muted-foreground hover:bg-secondary hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete book"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               );
             })}
           </div>
