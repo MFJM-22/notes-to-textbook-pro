@@ -113,7 +113,8 @@ export default function NewBookPage() {
             )
           );
 
-          await runOcrOnPage(token, { pageId: pageRow.id });
+          const res = await runOcrOnPage(token, { pageId: pageRow.id });
+          if (res && res.error) throw new Error(res.error);
           setItems((prev) =>
             prev.map((it, k) =>
               k === idx ? { ...it, status: "done", message: "Text extracted" } : it

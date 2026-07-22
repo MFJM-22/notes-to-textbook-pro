@@ -5,7 +5,7 @@ import { getAuthenticatedClient } from "./auth";
 export async function runOcrOnPage(token: string, data: { pageId: string }) {
   const { supabase, userId } = await getAuthenticatedClient(token);
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+  if (!apiKey) return { error: "GEMINI_API_KEY missing" };
 
   // 1. Load page row (RLS ensures ownership)
   const { data: page, error: pageErr } = await supabase
@@ -13,11 +13,11 @@ export async function runOcrOnPage(token: string, data: { pageId: string }) {
     .select("id, storage_path, book_id, mime_type")
     .eq("id", data.pageId)
     .single();
-  if (pageErr || !page) throw new Error("Page not found");
+  if (pageErr || !page) return { error: "Page not found" };
 
   // 2. Download image bytes
   const { data: blob, error: dlErr } = await supabase.storage.from("scans").download(page.storage_path);
-  if (dlErr || !blob) throw new Error("Could not read scan");
+  if (dlErr || !blob) return { error: "Could not read scan" };
   const buf = await blob.arrayBuffer();
   const b64 = Buffer.from(buf).toString("base64");
   const mime = page.mime_type || blob.type || "image/jpeg";
@@ -28,7 +28,7 @@ export async function runOcrOnPage(token: string, data: { pageId: string }) {
   // 4. Call Gemini vision API directly for OCR
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -54,7 +54,7 @@ export async function runOcrOnPage(token: string, data: { pageId: string }) {
         .from("pages")
         .update({ ocr_status: "failed", ocr_text: `OCR failed: ${res.status}` })
         .eq("id", page.id);
-      throw new Error(`Gemini OCR failed [${res.status}]: ${body}`);
+      return { error: `Gemini OCR failed [${res.status}]: ${body}` };
     }
 
     const json = await res.json() as any;
@@ -73,6 +73,6 @@ export async function runOcrOnPage(token: string, data: { pageId: string }) {
     return { ok: true, textLength: text.length };
   } catch (e) {
     await supabase.from("pages").update({ ocr_status: "failed" }).eq("id", page.id);
-    throw e;
+    return { error: e instanceof Error ? e.message : "Failed" };
   }
 }
