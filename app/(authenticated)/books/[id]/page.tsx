@@ -3,13 +3,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
   ArrowLeft, Sparkles, BookOpen, Plus, Trash2, Loader2, Download, Printer,
-  ScanText, ListTree, Wand2, X,
+  ScanText, ListTree, Wand2, X, Upload, FileImage, CheckCircle2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { runOcrOnPage } from "@/app/actions/ocr";
 import { structureBook } from "@/app/actions/structure";
 import { generateGlossary } from "@/app/actions/glossary";
 import { exportBookDocx } from "@/app/actions/export";
@@ -232,7 +233,7 @@ export default function BookReviewPage() {
               onChange={() => qc.invalidateQueries({ queryKey: ["book", id] })}
             />
           )}
-          {selection?.kind === "scans" && <ScansView pages={pages} />}
+          {selection?.kind === "scans" && <ScansView bookId={id} pages={pages} onChange={() => qc.invalidateQueries({ queryKey: ["book", id] })} />}
         </main>
       </div>
     </div>
@@ -501,13 +502,126 @@ function GlossaryRow({ row, bookId, onChange, onDelete }: {
   );
 }
 
-function ScansView({ pages }: { pages: Array<{ id: string; page_order: number; ocr_text: string | null; ocr_status: string }> }) {
+type OcrStatus = "pending" | "uploading" | "processing" | "done" | "failed";
+
+function ScansView({ bookId, pages, onChange }: { bookId: string; pages: Array<{ id: string; page_order: number; ocr_text: string | null; ocr_status: string }>; onChange: () => void }) {
+  const [items, setItems] = useState<Array<{ file: File; status: OcrStatus; message?: string }>>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onFiles = async (files: FileList | null) => {
+    if (!files) return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return toast.error("Not signed in");
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token;
+    if (!token) return toast.error("Session expired, please sign in again");
+
+    const userId = u.user.id;
+    const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (!arr.length) return toast.error("Upload image files (PNG/JPG)");
+
+    const startIdx = pages.length + items.length;
+    const newItems = arr.map((f) => ({ file: f, status: "uploading" as OcrStatus }));
+    setItems((prev) => [...prev, ...newItems]);
+
+    await Promise.all(
+      arr.map(async (file, i) => {
+        const idx = startIdx + i;
+        try {
+          const path = `${userId}/${bookId}/${Date.now()}-${i}-${file.name.replace(/[^\w.-]/g, "_")}`;
+          const { error: upErr } = await supabase.storage
+            .from("scans")
+            .upload(path, file, { contentType: file.type });
+          if (upErr) throw upErr;
+
+          const { data: pageRow, error: insErr } = await supabase
+            .from("pages")
+            .insert({
+              book_id: bookId,
+              author_id: userId,
+              page_order: idx,
+              storage_path: path,
+              mime_type: file.type,
+              ocr_status: "pending",
+            })
+            .select("id")
+            .single();
+          if (insErr) throw insErr;
+
+          setItems((prev) =>
+            prev.map((it, k) =>
+              k === prev.length - arr.length + i
+                ? { ...it, status: "processing", message: "Reading with Gemini…" }
+                : it
+            )
+          );
+
+          const res = await runOcrOnPage(token, { pageId: pageRow.id });
+          if (res && res.error) throw new Error(res.error);
+          
+          setItems((prev) =>
+            prev.map((it, k) =>
+              k === prev.length - arr.length + i ? { ...it, status: "done", message: "Text extracted" } : it
+            )
+          );
+          onChange();
+        } catch (e) {
+          setItems((prev) =>
+            prev.map((it, k) =>
+              k === prev.length - arr.length + i
+                ? { ...it, status: "failed", message: e instanceof Error ? e.message : "Failed" }
+                : it
+            )
+          );
+        }
+      })
+    );
+  };
+
   return (
     <div>
       <h2 className="text-2xl">Scanned pages</h2>
       <p className="mt-1 text-sm text-muted-foreground">Raw OCR output from your uploaded pages. Read-only reference.</p>
-      <div className="mt-4 space-y-4">
-        {pages.length === 0 && <div className="book-card text-center text-muted-foreground">No pages uploaded.</div>}
+      
+      <div
+        className="book-card mt-6 grid cursor-pointer place-items-center border-2 border-dashed py-10 text-center transition hover:border-accent"
+        onClick={() => fileRef.current?.click()}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => { e.preventDefault(); onFiles(e.dataTransfer.files); }}
+      >
+        <Upload className="h-8 w-8" style={{ color: "var(--gold)" }} />
+        <p className="mt-3 font-medium">Drop more scanned pages here, or click to browse</p>
+        <p className="mt-1 text-sm text-muted-foreground">PNG or JPG · handwritten or printed</p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          multiple
+          hidden
+          onChange={(e) => onFiles(e.target.files)}
+        />
+      </div>
+
+      {items.length > 0 && (
+        <div className="book-card mt-6">
+          <h3 className="text-lg font-semibold">New Uploads</h3>
+          <ul className="mt-4 divide-y divide-border">
+            {items.map((it, i) => (
+              <li key={i} className="flex items-center gap-3 py-3">
+                <FileImage className="h-5 w-5 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">{it.file.name}</div>
+                  <div className="text-xs text-muted-foreground">{it.message ?? it.status}</div>
+                </div>
+                <StatusBadge status={it.status} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-6 space-y-4">
+        {pages.length === 0 && items.length === 0 && <div className="book-card text-center text-muted-foreground">No pages uploaded.</div>}
         {pages.map((p, i) => (
           <div key={p.id} className="book-card">
             <div className="flex items-center justify-between">
@@ -521,5 +635,20 @@ function ScansView({ pages }: { pages: Array<{ id: string; page_order: number; o
         ))}
       </div>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: OcrStatus }) {
+  if (status === "done")
+    return (
+      <span className="inline-flex items-center gap-1 text-sm" style={{ color: "oklch(0.55 0.15 145)" }}>
+        <CheckCircle2 className="h-4 w-4" /> Done
+      </span>
+    );
+  if (status === "failed") return <span className="text-sm text-destructive">Failed</span>;
+  return (
+    <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+      <Loader2 className="h-4 w-4 animate-spin" /> {status}
+    </span>
   );
 }
