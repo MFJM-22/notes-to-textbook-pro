@@ -15,14 +15,18 @@ const StructureSchema = z.object({
           body_markdown: z.string(),
           objectives: z.array(z.string()).default([]),
           activities: z.array(z.string()).default([]),
-        })
+        }),
       ),
-    })
+    }),
   ),
 });
 
 function extractJson(text: string): unknown {
-  const trimmed = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const trimmed = text
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
   try {
     return JSON.parse(trimmed);
   } catch {
@@ -68,7 +72,7 @@ Teacher's raw notes (from OCR of scanned pages):
 ${notes}`;
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -79,7 +83,7 @@ ${notes}`;
           temperature: 0.3,
         },
       }),
-    }
+    },
   );
 
   if (!res.ok) {
@@ -87,7 +91,8 @@ ${notes}`;
     throw new Error(`AI structuring failed [${res.status}]: ${body}`);
   }
 
-  const json = await res.json() as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const json = (await res.json()) as any;
   const raw = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
   const parsed = StructureSchema.parse(extractJson(raw));
 

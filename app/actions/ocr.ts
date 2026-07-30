@@ -16,7 +16,9 @@ export async function runOcrOnPage(token: string, data: { pageId: string }) {
   if (pageErr || !page) return { error: "Page not found" };
 
   // 2. Download image bytes
-  const { data: blob, error: dlErr } = await supabase.storage.from("scans").download(page.storage_path);
+  const { data: blob, error: dlErr } = await supabase.storage
+    .from("scans")
+    .download(page.storage_path);
   if (dlErr || !blob) return { error: "Could not read scan" };
   const buf = await blob.arrayBuffer();
   const b64 = Buffer.from(buf).toString("base64");
@@ -28,7 +30,7 @@ export async function runOcrOnPage(token: string, data: { pageId: string }) {
   // 4. Call Gemini vision API directly for OCR (gemini-2.0-flash supports multimodal/vision)
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -64,7 +66,8 @@ export async function runOcrOnPage(token: string, data: { pageId: string }) {
       return { error: `Gemini OCR failed [${res.status}]: ${detail}` };
     }
 
-    const json = await res.json() as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const json = (await res.json()) as any;
     const text = json.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
 
     await supabase

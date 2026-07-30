@@ -8,6 +8,7 @@ description: Key decisions made when migrating this project from Lovable to Repl
 The three AI server functions previously called `https://ai.gateway.lovable.dev/v1/chat/completions` with a `Lovable-API-Key` header. Replaced with direct calls to `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}`.
 
 Model mapping:
+
 - OCR (`ocr.functions.ts`): `gemini-2.0-flash` (has vision/multimodal)
 - Structuring (`structure.functions.ts`): `gemini-2.5-flash`
 - Glossary (`glossary.functions.ts`): `gemini-2.5-flash`

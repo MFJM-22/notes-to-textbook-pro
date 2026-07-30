@@ -10,11 +10,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
 
-export default function AuthenticatedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthenticatedShell>{children}</AuthenticatedShell>
@@ -53,13 +49,15 @@ function AuthenticatedShell({ children }: { children: React.ReactNode }) {
 
   if (checking) {
     return (
-      <div className="grid min-h-screen place-items-center text-muted-foreground">
-        Loading…
-      </div>
+      <div className="grid min-h-screen place-items-center text-muted-foreground">Loading…</div>
     );
   }
 
-  const navLink = (href: string, label: string, Icon: React.ComponentType<{ className?: string }>) => (
+  const navLink = (
+    href: string,
+    label: string,
+    Icon: React.ComponentType<{ className?: string }>,
+  ) => (
     <Link
       href={href}
       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-secondary ${

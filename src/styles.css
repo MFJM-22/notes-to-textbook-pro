@@ -34,7 +34,8 @@
   --color-gold: var(--gold);
   --font-serif: "Fraunces", ui-serif, Georgia, serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --shadow-book: 0 30px 60px -30px oklch(0.25 0.05 60 / 0.35), 0 8px 20px -12px oklch(0.25 0.05 60 / 0.25);
+  --shadow-book:
+    0 30px 60px -30px oklch(0.25 0.05 60 / 0.35), 0 8px 20px -12px oklch(0.25 0.05 60 / 0.25);
   --gradient-warm: linear-gradient(140deg, oklch(0.985 0.015 85) 0%, oklch(0.95 0.03 75) 100%);
   --gradient-ink: linear-gradient(140deg, oklch(0.28 0.05 260) 0%, oklch(0.18 0.04 260) 100%);
 }
@@ -65,14 +66,22 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
   body {
     background: var(--gradient-warm);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     min-height: 100vh;
   }
-  h1, h2, h3, h4 { font-family: var(--font-serif); letter-spacing: -0.02em; }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.02em;
+  }
 }
 
 @utility btn-primary {
@@ -81,7 +90,9 @@
   color: var(--color-primary-foreground);
   box-shadow: 0 4px 14px -4px oklch(0.22 0.03 260 / 0.4);
 }
-@utility btn-primary-hover { @apply hover:opacity-90 hover:-translate-y-0.5; }
+@utility btn-primary-hover {
+  @apply hover:opacity-90 hover:-translate-y-0.5;
+}
 
 @utility btn-outline {
   @apply inline-flex items-center justify-center rounded-lg border px-5 py-2.5 text-sm font-medium transition hover:bg-secondary;
@@ -92,4 +103,6 @@
   @apply rounded-2xl bg-card p-6 transition;
   box-shadow: var(--shadow-book);
 }
-@utility book-card-hover { @apply hover:-translate-y-1; }
+@utility book-card-hover {
+  @apply hover:-translate-y-1;
+}

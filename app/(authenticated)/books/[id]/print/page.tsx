@@ -65,7 +65,9 @@ export default function PrintPage() {
         {/* Cover */}
         <section className="cover">
           <h1>{book.title}</h1>
-          <p className="meta">{book.subject} · {book.class_level} · {book.term}</p>
+          <p className="meta">
+            {book.subject} · {book.class_level} · {book.term}
+          </p>
           <div className="author">
             <div className="author-name">{author?.full_name}</div>
             <div className="author-credentials">{author?.credentials}</div>

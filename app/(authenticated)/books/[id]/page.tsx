@@ -6,8 +6,21 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Sparkles, BookOpen, Plus, Trash2, Loader2, Download, Printer,
-  ScanText, ListTree, Wand2, X, Upload, FileImage, CheckCircle2,
+  ArrowLeft,
+  Sparkles,
+  BookOpen,
+  Plus,
+  Trash2,
+  Loader2,
+  Download,
+  Printer,
+  ScanText,
+  ListTree,
+  Wand2,
+  X,
+  Upload,
+  FileImage,
+  CheckCircle2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { runOcrOnPage } from "@/app/actions/ocr";
@@ -15,8 +28,14 @@ import { structureBook } from "@/app/actions/structure";
 import { generateGlossary } from "@/app/actions/glossary";
 import { exportBookDocx } from "@/app/actions/export";
 import {
-  updateWeek, updateTopic, addTopic, deleteTopic,
-  addWeek, deleteWeek, upsertGlossaryTerm, deleteGlossaryTerm,
+  updateWeek,
+  updateTopic,
+  addTopic,
+  deleteTopic,
+  addWeek,
+  deleteWeek,
+  upsertGlossaryTerm,
+  deleteGlossaryTerm,
 } from "@/app/actions/content";
 
 type Selection = { kind: "week"; id: string } | { kind: "glossary" } | { kind: "scans" };
@@ -38,31 +57,65 @@ export default function BookReviewPage() {
   const bookQ = useQuery({
     queryKey: ["book", id],
     queryFn: async () => {
-      const [{ data: book }, { data: weeks }, { data: topics }, { data: pages }, { data: glossary }] =
-        await Promise.all([
-          supabase.from("books").select("*").eq("id", id).maybeSingle(),
-          supabase.from("weeks").select("*").eq("book_id", id).order("order_index"),
-          supabase.from("topics").select("*").eq("book_id", id).order("order_index"),
-          supabase.from("pages").select("id, page_order, ocr_text, ocr_status").eq("book_id", id).order("page_order"),
-          supabase.from("glossary_terms").select("*").eq("book_id", id).order("term"),
-        ]);
-      return { book, weeks: weeks ?? [], topics: topics ?? [], pages: pages ?? [], glossary: glossary ?? [] };
+      const [
+        { data: book },
+        { data: weeks },
+        { data: topics },
+        { data: pages },
+        { data: glossary },
+      ] = await Promise.all([
+        supabase.from("books").select("*").eq("id", id).maybeSingle(),
+        supabase.from("weeks").select("*").eq("book_id", id).order("order_index"),
+        supabase.from("topics").select("*").eq("book_id", id).order("order_index"),
+        supabase
+          .from("pages")
+          .select("id, page_order, ocr_text, ocr_status")
+          .eq("book_id", id)
+          .order("page_order"),
+        supabase.from("glossary_terms").select("*").eq("book_id", id).order("term"),
+      ]);
+      return {
+        book,
+        weeks: weeks ?? [],
+        topics: topics ?? [],
+        pages: pages ?? [],
+        glossary: glossary ?? [],
+      };
     },
   });
 
   const structureMut = useMutation({
-    mutationFn: async () => { const t = await getToken(); return structureBook(t, { bookId: id }); },
-    onSuccess: () => { toast.success("Textbook structured"); qc.invalidateQueries({ queryKey: ["book", id] }); },
+    mutationFn: async () => {
+      const t = await getToken();
+      return structureBook(t, { bookId: id });
+    },
+    onSuccess: () => {
+      toast.success("Textbook structured");
+      qc.invalidateQueries({ queryKey: ["book", id] });
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
   const glossaryMut = useMutation({
-    mutationFn: async () => { const t = await getToken(); return generateGlossary(t, { bookId: id }); },
-    onSuccess: () => { toast.success("Glossary generated"); qc.invalidateQueries({ queryKey: ["book", id] }); },
+    mutationFn: async () => {
+      const t = await getToken();
+      return generateGlossary(t, { bookId: id });
+    },
+    onSuccess: () => {
+      toast.success("Glossary generated");
+      qc.invalidateQueries({ queryKey: ["book", id] });
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
   });
   const exportMut = useMutation({
-    mutationFn: async () => { const t = await getToken(); return exportBookDocx(t, { bookId: id }); },
-    onSuccess: (res) => { setExportUrl(res.url); toast.success("Word file ready"); qc.invalidateQueries({ queryKey: ["book", id] }); },
+    mutationFn: async () => {
+      const t = await getToken();
+      return exportBookDocx(t, { bookId: id });
+    },
+    onSuccess: (res) => {
+      setExportUrl(res.url);
+      toast.success("Word file ready");
+      qc.invalidateQueries({ queryKey: ["book", id] });
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Export failed"),
   });
   const deleteMut = useMutation({
@@ -102,7 +155,9 @@ export default function BookReviewPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-4xl">{book.title}</h1>
-          <p className="mt-2 text-muted-foreground">{book.subject} · {book.class_level} · {book.term}</p>
+          <p className="mt-2 text-muted-foreground">
+            {book.subject} · {book.class_level} · {book.term}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -111,7 +166,11 @@ export default function BookReviewPage() {
             className="btn-primary btn-primary-hover"
             title={!pages.length ? "Upload pages first" : ""}
           >
-            {structureMut.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1 h-4 w-4" />}
+            {structureMut.isPending ? (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Sparkles className="mr-1 h-4 w-4" />
+            )}
             {weeks.length ? "Re-structure with AI" : "Structure with AI"}
           </button>
           <button
@@ -119,7 +178,11 @@ export default function BookReviewPage() {
             disabled={exportMut.isPending || !weeks.length}
             className="btn-outline"
           >
-            {exportMut.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Download className="mr-1 h-4 w-4" />}
+            {exportMut.isPending ? (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-1 h-4 w-4" />
+            )}
             Export Word
           </button>
           <Link href={`/books/${id}/print`} target="_blank" className="btn-outline">
@@ -127,14 +190,20 @@ export default function BookReviewPage() {
           </Link>
           <button
             onClick={() => {
-              if (confirm("Are you sure you want to delete this book? This action cannot be undone.")) {
+              if (
+                confirm("Are you sure you want to delete this book? This action cannot be undone.")
+              ) {
                 deleteMut.mutate();
               }
             }}
             disabled={deleteMut.isPending}
             className="btn-outline text-red-500 hover:text-red-600 hover:border-red-600 border-red-200"
           >
-            {deleteMut.isPending ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Trash2 className="mr-1 h-4 w-4" />}
+            {deleteMut.isPending ? (
+              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="mr-1 h-4 w-4" />
+            )}
             Delete
           </button>
         </div>
@@ -147,7 +216,10 @@ export default function BookReviewPage() {
             <a href={exportUrl} className="btn-primary btn-primary-hover" download>
               <Download className="mr-1 h-4 w-4" /> Download
             </a>
-            <button onClick={() => setExportUrl(null)} className="rounded-lg p-2 hover:bg-secondary">
+            <button
+              onClick={() => setExportUrl(null)}
+              className="rounded-lg p-2 hover:bg-secondary"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -183,11 +255,15 @@ export default function BookReviewPage() {
                   <button
                     onClick={() => setSelection({ kind: "week", id: w.id })}
                     className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-secondary ${
-                      selection?.kind === "week" && selection.id === w.id ? "bg-secondary font-medium" : ""
+                      selection?.kind === "week" && selection.id === w.id
+                        ? "bg-secondary font-medium"
+                        : ""
                     }`}
                   >
                     <BookOpen className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate">Week {w.week_number}: {w.title || "Untitled"}</span>
+                    <span className="truncate">
+                      Week {w.week_number}: {w.title || "Untitled"}
+                    </span>
                   </button>
                 </li>
               ))}
@@ -233,7 +309,13 @@ export default function BookReviewPage() {
               onChange={() => qc.invalidateQueries({ queryKey: ["book", id] })}
             />
           )}
-          {selection?.kind === "scans" && <ScansView bookId={id} pages={pages} onChange={() => qc.invalidateQueries({ queryKey: ["book", id] })} />}
+          {selection?.kind === "scans" && (
+            <ScansView
+              bookId={id}
+              pages={pages}
+              onChange={() => qc.invalidateQueries({ queryKey: ["book", id] })}
+            />
+          )}
         </main>
       </div>
     </div>
@@ -241,16 +323,28 @@ export default function BookReviewPage() {
 }
 
 function WeekView({
-  week, topics, onChange, onDeleteWeek,
+  week,
+  topics,
+  onChange,
+  onDeleteWeek,
 }: {
   week: { id: string; week_number: number; title: string; overview: string };
-  topics: Array<{ id: string; heading: string; body_markdown: string; objectives: string[]; activities: string[] }>;
+  topics: Array<{
+    id: string;
+    heading: string;
+    body_markdown: string;
+    objectives: string[];
+    activities: string[];
+  }>;
   onChange: () => void;
   onDeleteWeek: () => void;
 }) {
   const [title, setTitle] = useState(week.title);
   const [overview, setOverview] = useState(week.overview);
-  useEffect(() => { setTitle(week.title); setOverview(week.overview); }, [week.id]);
+  useEffect(() => {
+    setTitle(week.title);
+    setOverview(week.overview);
+  }, [week.id]);
 
   const saveWeek = async () => {
     try {
@@ -266,7 +360,9 @@ function WeekView({
     <div className="space-y-6">
       <div className="book-card space-y-3">
         <div className="flex items-start justify-between gap-3">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">Week {week.week_number}</div>
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">
+            Week {week.week_number}
+          </div>
           <button
             onClick={async () => {
               if (!confirm("Delete this entire week?")) return;
@@ -316,8 +412,17 @@ function WeekView({
   );
 }
 
-function TopicCard({ topic, onChange }: {
-  topic: { id: string; heading: string; body_markdown: string; objectives: string[]; activities: string[] };
+function TopicCard({
+  topic,
+  onChange,
+}: {
+  topic: {
+    id: string;
+    heading: string;
+    body_markdown: string;
+    objectives: string[];
+    activities: string[];
+  };
   onChange: () => void;
 }) {
   const [state, setState] = useState({
@@ -334,8 +439,14 @@ function TopicCard({ topic, onChange }: {
         id: topic.id,
         heading: state.heading,
         body_markdown: state.body_markdown,
-        objectives: state.objectives.split("\n").map((s) => s.trim()).filter(Boolean),
-        activities: state.activities.split("\n").map((s) => s.trim()).filter(Boolean),
+        objectives: state.objectives
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        activities: state.activities
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
       });
       onChange();
     } catch (e) {
@@ -379,7 +490,9 @@ function TopicCard({ topic, onChange }: {
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="text-xs uppercase tracking-wide text-muted-foreground">Objectives (one per line)</label>
+          <label className="text-xs uppercase tracking-wide text-muted-foreground">
+            Objectives (one per line)
+          </label>
           <textarea
             value={state.objectives}
             onChange={(e) => setState({ ...state, objectives: e.target.value })}
@@ -389,7 +502,9 @@ function TopicCard({ topic, onChange }: {
           />
         </div>
         <div>
-          <label className="text-xs uppercase tracking-wide text-muted-foreground">Activities (one per line)</label>
+          <label className="text-xs uppercase tracking-wide text-muted-foreground">
+            Activities (one per line)
+          </label>
           <textarea
             value={state.activities}
             onChange={(e) => setState({ ...state, activities: e.target.value })}
@@ -403,7 +518,13 @@ function TopicCard({ topic, onChange }: {
   );
 }
 
-function GlossaryView({ bookId, terms, onGenerate, generating, onChange }: {
+function GlossaryView({
+  bookId,
+  terms,
+  onGenerate,
+  generating,
+  onChange,
+}: {
   bookId: string;
   terms: Array<{ id: string; term: string; definition: string }>;
   onGenerate: () => void;
@@ -417,8 +538,16 @@ function GlossaryView({ bookId, terms, onGenerate, generating, onChange }: {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl">Glossary</h2>
-        <button onClick={onGenerate} disabled={generating} className="btn-primary btn-primary-hover">
-          {generating ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Wand2 className="mr-1 h-4 w-4" />}
+        <button
+          onClick={onGenerate}
+          disabled={generating}
+          className="btn-primary btn-primary-hover"
+        >
+          {generating ? (
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+          ) : (
+            <Wand2 className="mr-1 h-4 w-4" />
+          )}
           Generate with AI
         </button>
       </div>
@@ -441,8 +570,14 @@ function GlossaryView({ bookId, terms, onGenerate, generating, onChange }: {
             onClick={async () => {
               if (!newTerm.trim()) return;
               const t = await getToken();
-              await upsertGlossaryTerm(t, { bookId, term: newTerm.trim(), definition: newDef.trim() });
-              setNewTerm(""); setNewDef(""); onChange();
+              await upsertGlossaryTerm(t, {
+                bookId,
+                term: newTerm.trim(),
+                definition: newDef.trim(),
+              });
+              setNewTerm("");
+              setNewDef("");
+              onChange();
             }}
             className="btn-outline"
           >
@@ -476,7 +611,12 @@ function GlossaryView({ bookId, terms, onGenerate, generating, onChange }: {
   );
 }
 
-function GlossaryRow({ row, bookId, onChange, onDelete }: {
+function GlossaryRow({
+  row,
+  bookId,
+  onChange,
+  onDelete,
+}: {
   row: { id: string; term: string; definition: string };
   bookId: string;
   onChange: () => void;
@@ -491,11 +631,22 @@ function GlossaryRow({ row, bookId, onChange, onDelete }: {
   };
   return (
     <li className="book-card grid items-center gap-2 sm:grid-cols-[200px_1fr_auto]">
-      <input value={term} onChange={(e) => setTerm(e.target.value)} onBlur={save}
-        className="rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-ring" />
-      <input value={def} onChange={(e) => setDef(e.target.value)} onBlur={save}
-        className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring" />
-      <button onClick={onDelete} className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-destructive">
+      <input
+        value={term}
+        onChange={(e) => setTerm(e.target.value)}
+        onBlur={save}
+        className="rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-ring"
+      />
+      <input
+        value={def}
+        onChange={(e) => setDef(e.target.value)}
+        onBlur={save}
+        className="rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+      />
+      <button
+        onClick={onDelete}
+        className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-destructive"
+      >
         <Trash2 className="h-4 w-4" />
       </button>
     </li>
@@ -504,8 +655,18 @@ function GlossaryRow({ row, bookId, onChange, onDelete }: {
 
 type OcrStatus = "pending" | "uploading" | "processing" | "done" | "failed";
 
-function ScansView({ bookId, pages, onChange }: { bookId: string; pages: Array<{ id: string; page_order: number; ocr_text: string | null; ocr_status: string }>; onChange: () => void }) {
-  const [items, setItems] = useState<Array<{ file: File; status: OcrStatus; message?: string }>>([]);
+function ScansView({
+  bookId,
+  pages,
+  onChange,
+}: {
+  bookId: string;
+  pages: Array<{ id: string; page_order: number; ocr_text: string | null; ocr_status: string }>;
+  onChange: () => void;
+}) {
+  const [items, setItems] = useState<Array<{ file: File; status: OcrStatus; message?: string }>>(
+    [],
+  );
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onFiles = async (files: FileList | null) => {
@@ -552,17 +713,19 @@ function ScansView({ bookId, pages, onChange }: { bookId: string; pages: Array<{
             prev.map((it, k) =>
               k === prev.length - arr.length + i
                 ? { ...it, status: "processing", message: "Reading with Gemini…" }
-                : it
-            )
+                : it,
+            ),
           );
 
           const res = await runOcrOnPage(token, { pageId: pageRow.id });
           if (res && res.error) throw new Error(res.error);
-          
+
           setItems((prev) =>
             prev.map((it, k) =>
-              k === prev.length - arr.length + i ? { ...it, status: "done", message: "Text extracted" } : it
-            )
+              k === prev.length - arr.length + i
+                ? { ...it, status: "done", message: "Text extracted" }
+                : it,
+            ),
           );
           onChange();
         } catch (e) {
@@ -570,24 +733,29 @@ function ScansView({ bookId, pages, onChange }: { bookId: string; pages: Array<{
             prev.map((it, k) =>
               k === prev.length - arr.length + i
                 ? { ...it, status: "failed", message: e instanceof Error ? e.message : "Failed" }
-                : it
-            )
+                : it,
+            ),
           );
         }
-      })
+      }),
     );
   };
 
   return (
     <div>
       <h2 className="text-2xl">Scanned pages</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Raw OCR output from your uploaded pages. Read-only reference.</p>
-      
+      <p className="mt-1 text-sm text-muted-foreground">
+        Raw OCR output from your uploaded pages. Read-only reference.
+      </p>
+
       <div
         className="book-card mt-6 grid cursor-pointer place-items-center border-2 border-dashed py-10 text-center transition hover:border-accent"
         onClick={() => fileRef.current?.click()}
         onDragOver={(e) => e.preventDefault()}
-        onDrop={(e) => { e.preventDefault(); onFiles(e.dataTransfer.files); }}
+        onDrop={(e) => {
+          e.preventDefault();
+          onFiles(e.dataTransfer.files);
+        }}
       >
         <Upload className="h-8 w-8" style={{ color: "var(--gold)" }} />
         <p className="mt-3 font-medium">Drop more scanned pages here, or click to browse</p>
@@ -621,7 +789,9 @@ function ScansView({ bookId, pages, onChange }: { bookId: string; pages: Array<{
       )}
 
       <div className="mt-6 space-y-4">
-        {pages.length === 0 && items.length === 0 && <div className="book-card text-center text-muted-foreground">No pages uploaded.</div>}
+        {pages.length === 0 && items.length === 0 && (
+          <div className="book-card text-center text-muted-foreground">No pages uploaded.</div>
+        )}
         {pages.map((p, i) => (
           <div key={p.id} className="book-card">
             <div className="flex items-center justify-between">
@@ -641,7 +811,10 @@ function ScansView({ bookId, pages, onChange }: { bookId: string; pages: Array<{
 function StatusBadge({ status }: { status: OcrStatus }) {
   if (status === "done")
     return (
-      <span className="inline-flex items-center gap-1 text-sm" style={{ color: "oklch(0.55 0.15 145)" }}>
+      <span
+        className="inline-flex items-center gap-1 text-sm"
+        style={{ color: "oklch(0.55 0.15 145)" }}
+      >
         <CheckCircle2 className="h-4 w-4" /> Done
       </span>
     );

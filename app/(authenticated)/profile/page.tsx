@@ -38,9 +38,7 @@ export default function ProfilePage() {
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("no user");
-      const { error } = await supabase
-        .from("authors")
-        .upsert({ id: u.user.id, ...form });
+      const { error } = await supabase.from("authors").upsert({ id: u.user.id, ...form });
       if (error) throw error;
     },
     onSuccess: () => {

@@ -12,14 +12,14 @@ A web app for JSS1 & JSS2 teachers in Nigeria that turns scanned handwritten les
 
 ## Tech stack
 
-| Layer | Technology |
-|---|---|
-| Framework | TanStack Start (SSR) + React 19 |
-| Styling | Tailwind CSS v4 + Radix UI (shadcn/ui) |
-| Database & Auth | Supabase (PostgreSQL, Row-Level Security, Storage) |
-| AI | Google Gemini API (`gemini-2.0-flash` for OCR, `gemini-2.5-flash` for structuring & glossary) |
-| Export | `docx` npm package (server-side Word generation) |
-| Package manager | `bun` |
+| Layer           | Technology                                                                                    |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| Framework       | TanStack Start (SSR) + React 19                                                               |
+| Styling         | Tailwind CSS v4 + Radix UI (shadcn/ui)                                                        |
+| Database & Auth | Supabase (PostgreSQL, Row-Level Security, Storage)                                            |
+| AI              | Google Gemini API (`gemini-2.0-flash` for OCR, `gemini-2.5-flash` for structuring & glossary) |
+| Export          | `docx` npm package (server-side Word generation)                                              |
+| Package manager | `bun`                                                                                         |
 
 ## Project structure
 
@@ -59,14 +59,14 @@ supabase/
 
 Set the following as environment secrets (never hardcode them):
 
-| Variable | Description |
-|---|---|
-| `SUPABASE_URL` | Your Supabase project URL |
-| `VITE_SUPABASE_URL` | Same value — needed for Vite client-side injection |
-| `SUPABASE_PUBLISHABLE_KEY` | Supabase anon/public key |
+| Variable                        | Description                                        |
+| ------------------------------- | -------------------------------------------------- |
+| `SUPABASE_URL`                  | Your Supabase project URL                          |
+| `VITE_SUPABASE_URL`             | Same value — needed for Vite client-side injection |
+| `SUPABASE_PUBLISHABLE_KEY`      | Supabase anon/public key                           |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Same value — needed for Vite client-side injection |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-only, bypasses RLS) |
-| `GEMINI_API_KEY` | Google Gemini API key |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Service role key (server-only, bypasses RLS)       |
+| `GEMINI_API_KEY`                | Google Gemini API key                              |
 
 ### Google OAuth (optional)
 

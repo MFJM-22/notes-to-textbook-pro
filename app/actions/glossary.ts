@@ -8,12 +8,16 @@ const GlossarySchema = z.object({
     z.object({
       term: z.string(),
       definition: z.string(),
-    })
+    }),
   ),
 });
 
 function extractJson(text: string): unknown {
-  const trimmed = text.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const trimmed = text
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
   try {
     return JSON.parse(trimmed);
   } catch {
@@ -58,7 +62,7 @@ Content:
 ${corpus}`;
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-latest:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -69,7 +73,7 @@ ${corpus}`;
           temperature: 0.3,
         },
       }),
-    }
+    },
   );
 
   if (!res.ok) {
@@ -77,7 +81,8 @@ ${corpus}`;
     throw new Error(`Glossary generation failed [${res.status}]: ${body}`);
   }
 
-  const json = await res.json() as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const json = (await res.json()) as any;
   const raw = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
   const parsed = GlossarySchema.parse(extractJson(raw));
 

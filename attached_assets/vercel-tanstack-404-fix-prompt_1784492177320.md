@@ -3,6 +3,7 @@ My app is deployed on Vercel at https://notes-to-textbook-pro.vercel.app/ using 
 A previous commit ("Add Vercel preset for TanStack Start SSR deployment") was supposed to fix Vercel deployment, but the issue persists.
 
 Please:
+
 1. Check the TanStack Start Vercel preset/adapter configuration in this codebase (likely in vite.config.ts, app.config.ts, or a vercel.json) and confirm it's correctly set up to output in the format Vercel's TanStack Start framework preset expects (this usually involves a `.vercel/output` directory with a config.json, or the preset handling this automatically — verify which applies here).
 2. Confirm the TanStack Start Vercel deployment target/preset package is actually installed and correctly referenced (check package.json and the relevant config file for something like a `vercel()` preset function from TanStack Start's deployment targets).
 3. Fix whatever is misconfigured so the homepage and all routes resolve correctly on Vercel, then confirm by describing what the corrected config looks like and why the previous version failed.

@@ -35,8 +35,8 @@ export default function LandingPage() {
             <span style={{ color: "var(--gold)" }}>publication-ready textbook</span>.
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-            Scan your lesson notes. We turn them into a beautifully typeset textbook —
-            weeks, topics, glossary, and a Word export you can print or hand to a publisher.
+            Scan your lesson notes. We turn them into a beautifully typeset textbook — weeks,
+            topics, glossary, and a Word export you can print or hand to a publisher.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/auth" className="btn-primary btn-primary-hover">

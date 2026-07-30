@@ -13,7 +13,11 @@ const statusLabel: Record<
   uploading: { label: "Uploading", icon: Clock, color: "oklch(0.72 0.14 55)" },
   ocr_processing: { label: "OCR Processing", icon: ScanText, color: "oklch(0.65 0.15 240)" },
   awaiting_review: { label: "Awaiting Review", icon: Clock, color: "oklch(0.72 0.14 55)" },
-  awaiting_structuring: { label: "Ready to structure", icon: ScanText, color: "oklch(0.65 0.15 240)" },
+  awaiting_structuring: {
+    label: "Ready to structure",
+    icon: ScanText,
+    color: "oklch(0.65 0.15 240)",
+  },
   structured: { label: "Structured", icon: CheckCircle2, color: "oklch(0.6 0.14 165)" },
   generated: { label: "Generated", icon: CheckCircle2, color: "oklch(0.55 0.15 145)" },
 };
@@ -55,7 +59,9 @@ export default function DashboardPage() {
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-4xl">Your books</h1>
-          <p className="mt-2 text-muted-foreground">Every textbook you&apos;re crafting, in one place.</p>
+          <p className="mt-2 text-muted-foreground">
+            Every textbook you&apos;re crafting, in one place.
+          </p>
         </div>
         <Link href="/books/new" className="btn-primary btn-primary-hover">
           <Plus className="mr-1 h-4 w-4" /> New book
@@ -87,10 +93,7 @@ export default function DashboardPage() {
               const Icon = s.icon;
               return (
                 <div key={b.id} className="relative group">
-                  <Link
-                    href={`/books/${b.id}`}
-                    className="book-card book-card-hover block h-full"
-                  >
+                  <Link href={`/books/${b.id}`} className="book-card book-card-hover block h-full">
                     <div className="flex items-start justify-between pr-8">
                       <BookOpen className="h-6 w-6" style={{ color: "var(--gold)" }} />
                       <span
@@ -108,7 +111,11 @@ export default function DashboardPage() {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      if (confirm("Are you sure you want to delete this book? This action cannot be undone.")) {
+                      if (
+                        confirm(
+                          "Are you sure you want to delete this book? This action cannot be undone.",
+                        )
+                      ) {
                         deleteMut.mutate(b.id);
                       }
                     }}

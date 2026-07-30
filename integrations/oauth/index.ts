@@ -9,10 +9,7 @@ type SignInOptions = {
 
 export const oauthClient = {
   auth: {
-    signInWithOAuth: async (
-      provider: "google" | "apple" | "microsoft",
-      opts?: SignInOptions,
-    ) => {
+    signInWithOAuth: async (provider: "google" | "apple" | "microsoft", opts?: SignInOptions) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider as Provider,
         options: {

@@ -4,7 +4,7 @@ import { getAuthenticatedClient } from "./auth";
 
 export async function updateWeek(
   token: string,
-  data: { id: string; title?: string; overview?: string }
+  data: { id: string; title?: string; overview?: string },
 ) {
   const { supabase } = await getAuthenticatedClient(token);
   const { id, ...patch } = data;
@@ -21,7 +21,7 @@ export async function updateTopic(
     body_markdown?: string;
     objectives?: string[];
     activities?: string[];
-  }
+  },
 ) {
   const { supabase } = await getAuthenticatedClient(token);
   const { id, ...patch } = data;
@@ -109,7 +109,7 @@ export async function upsertGlossaryTerm(
     bookId: string;
     term: string;
     definition: string;
-  }
+  },
 ) {
   const { supabase, userId } = await getAuthenticatedClient(token);
   if (data.id) {

@@ -8,9 +8,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { runOcrOnPage } from "@/app/actions/ocr";
 
 const SUBJECTS = [
-  "Mathematics", "English Studies", "Basic Science", "Social Studies",
-  "Civic Education", "Agricultural Science", "Business Studies", "Computer Studies",
-  "Home Economics", "Cultural & Creative Arts", "History", "Christian Religious Studies",
+  "Mathematics",
+  "English Studies",
+  "Basic Science",
+  "Social Studies",
+  "Civic Education",
+  "Agricultural Science",
+  "Business Studies",
+  "Computer Studies",
+  "Home Economics",
+  "Cultural & Creative Arts",
+  "History",
+  "Christian Religious Studies",
   "Islamic Religious Studies",
 ];
 const CLASSES = ["JSS1", "JSS2"];
@@ -79,7 +88,10 @@ export default function NewBookPage() {
     if (!arr.length) return toast.error("Upload image files (PNG/JPG)");
 
     const startIdx = items.length;
-    setItems((prev) => [...prev, ...arr.map((f) => ({ file: f, status: "uploading" as OcrStatus }))]);
+    setItems((prev) => [
+      ...prev,
+      ...arr.map((f) => ({ file: f, status: "uploading" as OcrStatus })),
+    ]);
 
     await Promise.all(
       arr.map(async (file, i) => {
@@ -108,28 +120,33 @@ export default function NewBookPage() {
           setItems((prev) =>
             prev.map((it, k) =>
               k === idx
-                ? { ...it, pageId: pageRow.id, status: "processing", message: "Reading with Gemini…" }
-                : it
-            )
+                ? {
+                    ...it,
+                    pageId: pageRow.id,
+                    status: "processing",
+                    message: "Reading with Gemini…",
+                  }
+                : it,
+            ),
           );
 
           const res = await runOcrOnPage(token, { pageId: pageRow.id });
           if (res && res.error) throw new Error(res.error);
           setItems((prev) =>
             prev.map((it, k) =>
-              k === idx ? { ...it, status: "done", message: "Text extracted" } : it
-            )
+              k === idx ? { ...it, status: "done", message: "Text extracted" } : it,
+            ),
           );
         } catch (e) {
           setItems((prev) =>
             prev.map((it, k) =>
               k === idx
                 ? { ...it, status: "failed", message: e instanceof Error ? e.message : "Failed" }
-                : it
-            )
+                : it,
+            ),
           );
         }
-      })
+      }),
     );
 
     await supabase.from("books").update({ status: "awaiting_structuring" }).eq("id", bookId);
@@ -199,8 +216,18 @@ export default function NewBookPage() {
             </Field>
           </div>
           <div className="flex justify-end">
-            <button onClick={createBook} disabled={creating} className="btn-primary btn-primary-hover">
-              {creating ? "Creating…" : <>Continue <ArrowRight className="ml-1 h-4 w-4" /></>}
+            <button
+              onClick={createBook}
+              disabled={creating}
+              className="btn-primary btn-primary-hover"
+            >
+              {creating ? (
+                "Creating…"
+              ) : (
+                <>
+                  Continue <ArrowRight className="ml-1 h-4 w-4" />
+                </>
+              )}
             </button>
           </div>
           <style>{`.input-select{width:100%;border-radius:.5rem;border:1px solid var(--color-border);background:var(--color-background);padding:.5rem .75rem;font-size:.875rem;outline:none}`}</style>
@@ -213,11 +240,16 @@ export default function NewBookPage() {
             className="book-card grid cursor-pointer place-items-center border-2 border-dashed py-14 text-center transition hover:border-accent"
             onClick={() => fileRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); onFiles(e.dataTransfer.files); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              onFiles(e.dataTransfer.files);
+            }}
           >
             <Upload className="h-8 w-8" style={{ color: "var(--gold)" }} />
             <p className="mt-3 font-medium">Drop scanned pages here, or click to browse</p>
-            <p className="mt-1 text-sm text-muted-foreground">PNG or JPG · handwritten or printed</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              PNG or JPG · handwritten or printed
+            </p>
             <input
               ref={fileRef}
               type="file"
@@ -249,7 +281,10 @@ export default function NewBookPage() {
                 </button>
                 <button
                   onClick={() => bookId && router.push(`/books/${bookId}`)}
-                  disabled={!items.length || items.some((it) => it.status !== "done" && it.status !== "failed")}
+                  disabled={
+                    !items.length ||
+                    items.some((it) => it.status !== "done" && it.status !== "failed")
+                  }
                   className="btn-primary btn-primary-hover"
                 >
                   Review &amp; structure <ArrowRight className="ml-1 h-4 w-4" />
@@ -263,14 +298,25 @@ export default function NewBookPage() {
   );
 }
 
-function Stepper({ n, label, active, done }: { n: number; label: string; active: boolean; done: boolean }) {
+function Stepper({
+  n,
+  label,
+  active,
+  done,
+}: {
+  n: number;
+  label: string;
+  active: boolean;
+  done: boolean;
+}) {
   return (
     <div className="flex items-center gap-2">
       <div
         className="grid h-8 w-8 place-items-center rounded-full text-sm font-semibold"
         style={{
           background: active || done ? "var(--gradient-ink)" : "var(--color-secondary)",
-          color: active || done ? "var(--color-primary-foreground)" : "var(--color-muted-foreground)",
+          color:
+            active || done ? "var(--color-primary-foreground)" : "var(--color-muted-foreground)",
         }}
       >
         {done ? <CheckCircle2 className="h-4 w-4" /> : n}
@@ -292,7 +338,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function StatusBadge({ status }: { status: OcrStatus }) {
   if (status === "done")
     return (
-      <span className="inline-flex items-center gap-1 text-sm" style={{ color: "oklch(0.55 0.15 145)" }}>
+      <span
+        className="inline-flex items-center gap-1 text-sm"
+        style={{ color: "oklch(0.55 0.15 145)" }}
+      >
         <CheckCircle2 className="h-4 w-4" /> Done
       </span>
     );

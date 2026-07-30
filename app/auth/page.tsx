@@ -55,7 +55,6 @@ export default function AuthPage() {
     }
   };
 
-
   return (
     <>
       <Toaster richColors />
@@ -80,7 +79,6 @@ export default function AuthPage() {
                 ? "Sign in to continue building your textbook."
                 : "Start turning your notes into a textbook."}
             </p>
-
 
             <form onSubmit={submit} className="space-y-3">
               {mode === "signup" && (
@@ -115,11 +113,7 @@ export default function AuthPage() {
                 disabled={loading}
                 className="btn-primary btn-primary-hover w-full"
               >
-                {loading
-                  ? "Please wait…"
-                  : mode === "signin"
-                  ? "Sign in"
-                  : "Create account"}
+                {loading ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
               </button>
             </form>
 

@@ -2,17 +2,27 @@
 
 import { getAuthenticatedClient } from "./auth";
 import {
-  Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
-  PageBreak, LevelFormat,
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  AlignmentType,
+  PageBreak,
+  LevelFormat,
 } from "docx";
 
 function mdParagraphs(text: string): Paragraph[] {
-  const blocks = text.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  const blocks = text
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter(Boolean);
   return blocks.map(
-    (b) => new Paragraph({
-      children: [new TextRun({ text: b.replace(/\s+/g, " "), size: 22 })],
-      spacing: { after: 160 },
-    })
+    (b) =>
+      new Paragraph({
+        children: [new TextRun({ text: b.replace(/\s+/g, " "), size: 22 })],
+        spacing: { after: 160 },
+      }),
   );
 }
 
@@ -64,7 +74,9 @@ export async function exportBookDocx(token: string, data: { bookId: string }) {
     new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { after: 200 },
-      children: [new TextRun({ text: `${book.subject} · ${book.class_level} · ${book.term}`, size: 28 })],
+      children: [
+        new TextRun({ text: `${book.subject} · ${book.class_level} · ${book.term}`, size: 28 }),
+      ],
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
@@ -75,7 +87,7 @@ export async function exportBookDocx(token: string, data: { bookId: string }) {
       alignment: AlignmentType.CENTER,
       children: [new TextRun({ text: author?.credentials || "", size: 22, italics: true })],
     }),
-    new Paragraph({ children: [new PageBreak()] })
+    new Paragraph({ children: [new PageBreak()] }),
   );
 
   // TOC
@@ -83,14 +95,14 @@ export async function exportBookDocx(token: string, data: { bookId: string }) {
     new Paragraph({
       heading: HeadingLevel.HEADING_1,
       children: [new TextRun({ text: "Contents", bold: true })],
-    })
+    }),
   );
   for (const w of weeks ?? []) {
     children.push(
       new Paragraph({
         spacing: { after: 60 },
         children: [new TextRun({ text: `Week ${w.week_number}: ${w.title}`, size: 22 })],
-      })
+      }),
     );
   }
   children.push(new Paragraph({ children: [new PageBreak()] }));
@@ -102,14 +114,14 @@ export async function exportBookDocx(token: string, data: { bookId: string }) {
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 320, after: 120 },
         children: [new TextRun({ text: `Week ${w.week_number}: ${w.title}`, bold: true })],
-      })
+      }),
     );
     if (w.overview) {
       children.push(
         new Paragraph({
           spacing: { after: 200 },
           children: [new TextRun({ text: w.overview, italics: true, size: 22 })],
-        })
+        }),
       );
     }
     const weekTopics = (topics ?? []).filter((t) => t.week_id === w.id);
@@ -120,21 +132,21 @@ export async function exportBookDocx(token: string, data: { bookId: string }) {
           spacing: { before: 240, after: 120 },
           children: [new TextRun({ text: t.heading, bold: true })],
         }),
-        ...mdParagraphs(t.body_markdown || "")
+        ...mdParagraphs(t.body_markdown || ""),
       );
       if (t.objectives?.length) {
         children.push(
           new Paragraph({
             spacing: { before: 120, after: 60 },
             children: [new TextRun({ text: "Learning objectives", bold: true, size: 22 })],
-          })
+          }),
         );
         for (const o of t.objectives) {
           children.push(
             new Paragraph({
               numbering: { reference: "bullets", level: 0 },
               children: [new TextRun({ text: o, size: 22 })],
-            })
+            }),
           );
         }
       }
@@ -143,14 +155,14 @@ export async function exportBookDocx(token: string, data: { bookId: string }) {
           new Paragraph({
             spacing: { before: 120, after: 60 },
             children: [new TextRun({ text: "Activities", bold: true, size: 22 })],
-          })
+          }),
         );
         for (const a of t.activities) {
           children.push(
             new Paragraph({
               numbering: { reference: "numbers", level: 0 },
               children: [new TextRun({ text: a, size: 22 })],
-            })
+            }),
           );
         }
       }
@@ -165,7 +177,7 @@ export async function exportBookDocx(token: string, data: { bookId: string }) {
         heading: HeadingLevel.HEADING_1,
         spacing: { before: 240, after: 200 },
         children: [new TextRun({ text: "Glossary", bold: true })],
-      })
+      }),
     );
     for (const g of glossary!) {
       children.push(
@@ -175,7 +187,7 @@ export async function exportBookDocx(token: string, data: { bookId: string }) {
             new TextRun({ text: `${g.term} — `, bold: true, size: 22 }),
             new TextRun({ text: g.definition, size: 22 }),
           ],
-        })
+        }),
       );
     }
   }
