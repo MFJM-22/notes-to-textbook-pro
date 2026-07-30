@@ -25,10 +25,10 @@ export async function runOcrOnPage(token: string, data: { pageId: string }) {
   // 3. Mark processing
   await supabase.from("pages").update({ ocr_status: "processing" }).eq("id", page.id);
 
-  // 4. Call Gemini vision API directly for OCR
+  // 4. Call Gemini vision API directly for OCR (gemini-2.0-flash supports multimodal/vision)
   try {
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -50,11 +50,18 @@ export async function runOcrOnPage(token: string, data: { pageId: string }) {
 
     if (!res.ok) {
       const body = await res.text();
+      let detail = body;
+      try {
+        const err = JSON.parse(body) as { error?: { message?: string } };
+        detail = err.error?.message ?? body;
+      } catch {
+        /* keep raw body */
+      }
       await supabase
         .from("pages")
-        .update({ ocr_status: "failed", ocr_text: `OCR failed: ${res.status}` })
+        .update({ ocr_status: "failed", ocr_text: `OCR failed: ${detail}` })
         .eq("id", page.id);
-      return { error: `Gemini OCR failed [${res.status}]: ${body}` };
+      return { error: `Gemini OCR failed [${res.status}]: ${detail}` };
     }
 
     const json = await res.json() as any;
